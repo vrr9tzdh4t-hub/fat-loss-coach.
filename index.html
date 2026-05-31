@@ -3,30 +3,37 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Fat Loss Coach - Darren Edition</title>
+<title>Fat Loss Coach v9</title>
 <meta name="theme-color" content="#0f172a">
 <link rel="manifest" href="manifest.json">
 <style>
 body{font-family:-apple-system,sans-serif;background:#f3f4f6;margin:0;padding:16px}
-.card{background:#fff;border-radius:14px;padding:16px;margin:12px 0;box-shadow:0 2px 6px rgba(0,0,0,.1)}
-input,textarea,select{width:100%;padding:8px;margin-top:4px}
-button{padding:10px 14px;border:none;border-radius:8px;background:#0f172a;color:white}
-h1,h2{margin:0 0 10px}
+.card{background:white;border-radius:14px;padding:16px;margin:12px 0;box-shadow:0 2px 6px rgba(0,0,0,.1)}
 .grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+input,textarea{width:100%;padding:8px;margin:4px 0}
+button{padding:10px;border:none;border-radius:8px;background:#0f172a;color:white}
+.small{font-size:12px;color:#666}
 </style>
 </head>
 <body>
-<h1>🏃 Fat Loss Coach</h1>
-<p>Goal: 96kg → 88-90kg | Waist 40.5\" → 37-38\"</p>
+<h1>🏃 Fat Loss Coach v9</h1>
 
 <div class="card">
 <h2>Dashboard</h2>
 <div class="grid">
-<div><b>Weight</b><br><input id="weight"></div>
-<div><b>Waist</b><br><input id="waist"></div>
+<div><b>Weight</b><input id="weight"></div>
+<div><b>Waist</b><input id="waist"></div>
 </div>
-<button onclick="saveStats()">Save Stats</button>
-<p id="stats"></p>
+<button onclick="saveStats()">Save</button>
+<p id="summary"></p>
+</div>
+
+<div class="card">
+<h2>Daily Habits</h2>
+<label><input type="checkbox" id="oats"> Overnight Oats</label><br>
+<label><input type="checkbox" id="wrap"> Chicken Wrap</label><br>
+<label><input type="checkbox" id="snack"> Protein Shake + Banana</label><br>
+<label><input type="checkbox" id="evening"> Planned Evening Snack</label><br>
 </div>
 
 <div class="card">
@@ -39,67 +46,49 @@ Notes<textarea id="notes"></textarea>
 </div>
 
 <div class="card">
-<h2>Weekday Plan</h2>
-<ul>
-<li>06:00 Flat White</li>
-<li>09:30 Overnight Oats</li>
-<li>13:00 Chicken Wrap</li>
-<li>15:30 Protein Shake + Banana</li>
-<li>Family Dinner</li>
-<li>20:30 Planned Snack</li>
-</ul>
+<h2>Weekly Review</h2>
+<textarea id="review" placeholder="Biggest win, challenge, plan for next week"></textarea>
+<button onclick="saveReview()">Save Review</button>
 </div>
 
 <div class="card">
-<h2>Dinner Guide</h2>
+<h2>Meal Plan</h2>
+<p>09:30 Overnight Oats<br>13:00 Chicken Wrap<br>15:30 Protein Shake + Banana</p>
+</div>
+
+<div class="card">
+<h2>Dinner Portions</h2>
 <ul>
 <li>Lasagne: 4x4 inch square + salad</li>
 <li>Fajitas: 200g chicken + 2 wraps</li>
-<li>Beef Burgers: 2 x 200g patties, 1 bun, 150g fries</li>
-<li>Chicken Burgers: 2 burgers, 1 bun, 150g fries</li>
+<li>Burgers: 2x200g patties, 1 bun, 150g fries</li>
 <li>Chilli: 400g chilli + rice</li>
 <li>Carbonara: 100g dry pasta + salad</li>
-<li>Pizza Night: One Ooni pizza</li>
-</ul>
-</div>
-
-<div class="card">
-<h2>Shopping List</h2>
-<ul>
-<li>1kg chicken breast</li>
-<li>1.25kg Greek yoghurt</li>
-<li>300g whey</li>
-<li>1kg oats</li>
-<li>500g frozen berries</li>
-<li>2 packs protein wraps</li>
-<li>5 bananas</li>
+<li>Pizza: One Ooni pizza</li>
 </ul>
 </div>
 
 <script>
 function saveStats(){
-localStorage.weight=weight.value;
-localStorage.waist=waist.value;
-load();
+ localStorage.weight=weight.value;
+ localStorage.waist=waist.value;
+ load();
 }
 function saveCheckin(){
-let arr=JSON.parse(localStorage.checkins||"[]");
-arr.push({
-date:new Date().toLocaleDateString(),
-noise:noise.value,
-adh:adh.value,
-training:training.value,
-notes:notes.value
-});
-localStorage.checkins=JSON.stringify(arr);
-alert("Check-in saved");
+ let arr=JSON.parse(localStorage.checkins||"[]");
+ arr.push({d:new Date().toLocaleDateString(),n:noise.value,a:adh.value,t:training.value});
+ localStorage.checkins=JSON.stringify(arr);
+ alert("Saved");
 }
+function saveReview(){localStorage.review=review.value;alert("Review saved");}
 function load(){
-weight.value=localStorage.weight||96;
-waist.value=localStorage.waist||40.5;
-stats.innerHTML="Current: "+weight.value+"kg | "+waist.value+"\" waist";
+ weight.value=localStorage.weight||96;
+ waist.value=localStorage.waist||40.5;
+ summary.innerHTML="Current Weight: "+weight.value+"kg | Waist: "+waist.value+"\"";
+ review.value=localStorage.review||"";
 }
 if('serviceWorker' in navigator){navigator.serviceWorker.register('sw.js');}
 load();
 </script>
-</body></html>
+</body>
+</html>
