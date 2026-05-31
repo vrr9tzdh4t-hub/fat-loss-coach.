@@ -3,92 +3,115 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Fat Loss Coach v9</title>
+<title>Fat Loss Coach v11</title>
 <meta name="theme-color" content="#0f172a">
 <link rel="manifest" href="manifest.json">
 <style>
 body{font-family:-apple-system,sans-serif;background:#f3f4f6;margin:0;padding:16px}
-.card{background:white;border-radius:14px;padding:16px;margin:12px 0;box-shadow:0 2px 6px rgba(0,0,0,.1)}
+.card{background:#fff;border-radius:14px;padding:16px;margin:12px 0;box-shadow:0 2px 6px rgba(0,0,0,.1)}
 .grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
 input,textarea{width:100%;padding:8px;margin:4px 0}
 button{padding:10px;border:none;border-radius:8px;background:#0f172a;color:white}
-.small{font-size:12px;color:#666}
+canvas{max-width:100%}
+.stat{font-size:1.1em;font-weight:bold}
 </style>
 </head>
 <body>
-<h1>🏃 Fat Loss Coach v9</h1>
+<h1>🏃 Fat Loss Coach v11</h1>
 
 <div class="card">
 <h2>Dashboard</h2>
 <div class="grid">
-<div><b>Weight</b><input id="weight"></div>
-<div><b>Waist</b><input id="waist"></div>
+<div>Weight<input id="weight"></div>
+<div>Waist<input id="waist"></div>
 </div>
-<button onclick="saveStats()">Save</button>
-<p id="summary"></p>
-</div>
-
-<div class="card">
-<h2>Daily Habits</h2>
-<label><input type="checkbox" id="oats"> Overnight Oats</label><br>
-<label><input type="checkbox" id="wrap"> Chicken Wrap</label><br>
-<label><input type="checkbox" id="snack"> Protein Shake + Banana</label><br>
-<label><input type="checkbox" id="evening"> Planned Evening Snack</label><br>
+<button onclick="saveStats()">Save Stats</button>
+<p id="summary" class="stat"></p>
+<p id="milestone"></p>
 </div>
 
 <div class="card">
 <h2>Daily Check-In</h2>
-Food Noise (1-10)<input id="noise" type="number">
-Adherence (1-10)<input id="adh" type="number">
-Training<input id="training">
-Notes<textarea id="notes"></textarea>
+Food Noise <input id="noise" type="number" min="1" max="10">
+Adherence <input id="adh" type="number" min="1" max="10">
+Training <input id="training">
+Notes <textarea id="notes"></textarea>
 <button onclick="saveCheckin()">Save Check-In</button>
 </div>
 
 <div class="card">
 <h2>Weekly Review</h2>
-<textarea id="review" placeholder="Biggest win, challenge, plan for next week"></textarea>
+<textarea id="review" placeholder="Wins, challenges, adjustments"></textarea>
 <button onclick="saveReview()">Save Review</button>
 </div>
 
 <div class="card">
-<h2>Meal Plan</h2>
-<p>09:30 Overnight Oats<br>13:00 Chicken Wrap<br>15:30 Protein Shake + Banana</p>
+<h2>Weight Trend</h2>
+<canvas id="chart" width="320" height="160"></canvas>
 </div>
 
 <div class="card">
-<h2>Dinner Portions</h2>
+<h2>Meal Plan</h2>
 <ul>
-<li>Lasagne: 4x4 inch square + salad</li>
-<li>Fajitas: 200g chicken + 2 wraps</li>
-<li>Burgers: 2x200g patties, 1 bun, 150g fries</li>
-<li>Chilli: 400g chilli + rice</li>
-<li>Carbonara: 100g dry pasta + salad</li>
-<li>Pizza: One Ooni pizza</li>
+<li>09:30 Overnight Oats</li>
+<li>13:00 Chicken Wrap</li>
+<li>15:30 Protein Shake + Banana</li>
+<li>Family Dinner</li>
+<li>20:30 Planned Evening Snack</li>
 </ul>
 </div>
 
 <script>
 function saveStats(){
- localStorage.weight=weight.value;
+ let w=Number(weight.value||0);
+ localStorage.weight=w;
  localStorage.waist=waist.value;
- load();
+ let hist=JSON.parse(localStorage.weights||"[]");
+ hist.push({d:new Date().toLocaleDateString(),w:w});
+ localStorage.weights=JSON.stringify(hist);
+ load(); draw();
 }
 function saveCheckin(){
- let arr=JSON.parse(localStorage.checkins||"[]");
- arr.push({d:new Date().toLocaleDateString(),n:noise.value,a:adh.value,t:training.value});
- localStorage.checkins=JSON.stringify(arr);
+ let c=JSON.parse(localStorage.checkins||"[]");
+ c.push({d:new Date().toLocaleDateString(),n:noise.value,a:adh.value,t:training.value,notes:notes.value});
+ localStorage.checkins=JSON.stringify(c);
  alert("Saved");
 }
-function saveReview(){localStorage.review=review.value;alert("Review saved");}
+function saveReview(){localStorage.review=review.value; alert("Review Saved");}
+
+function weeklyAverage(){
+ let data=JSON.parse(localStorage.weights||"[]");
+ let last=data.slice(-7);
+ if(!last.length) return "";
+ let avg=last.reduce((a,b)=>a+b.w,0)/last.length;
+ return avg.toFixed(1);
+}
+
 function load(){
  weight.value=localStorage.weight||96;
  waist.value=localStorage.waist||40.5;
- summary.innerHTML="Current Weight: "+weight.value+"kg | Waist: "+waist.value+"\"";
  review.value=localStorage.review||"";
+ summary.innerHTML="Current: "+weight.value+"kg | Waist "+waist.value+'" | 7-day Avg: '+weeklyAverage()+"kg";
+ let w=Number(weight.value||96);
+ let target = w>92 ? "Next target: 92kg" : (w>90 ? "Next target: 90kg" : "Next target: 88kg");
+ milestone.innerHTML=target;
+}
+
+function draw(){
+ const c=document.getElementById('chart'),ctx=c.getContext('2d');
+ ctx.clearRect(0,0,c.width,c.height);
+ let data=JSON.parse(localStorage.weights||"[]");
+ if(data.length<2) return;
+ let vals=data.map(x=>x.w), min=Math.min(...vals)-1, max=Math.max(...vals)+1;
+ ctx.beginPath();
+ data.forEach((p,i)=>{
+  let x=i*(c.width/(data.length-1));
+  let y=c.height-((p.w-min)/(max-min))*c.height;
+  if(i==0) ctx.moveTo(x,y); else ctx.lineTo(x,y);
+ });
+ ctx.stroke();
 }
 if('serviceWorker' in navigator){navigator.serviceWorker.register('sw.js');}
-load();
+load(); draw();
 </script>
-</body>
-</html>
+</body></html>
