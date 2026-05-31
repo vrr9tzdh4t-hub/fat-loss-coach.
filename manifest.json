@@ -1,1 +1,8 @@
-{"name":"Fat Loss Coach v11","short_name":"Coach","display":"standalone","start_url":"./index.html"}
+{
+"name":"Fat Loss Coach - Darren Edition",
+"short_name":"Fat Loss Coach",
+"display":"standalone",
+"start_url":"./index.html",
+"background_color":"#f3f4f6",
+"theme_color":"#0f172a"
+}
